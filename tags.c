@@ -1,5 +1,5 @@
 /*
- * tagCheck.c
+ * tags.c
  * 
  * Ashvin Warrier
  * Partner: Matthew Mashewske
@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef struct tag{
+typedef struct tag{	
 	bool isClose;
 	bool selfClose;
 	int lineNum;
@@ -54,13 +54,21 @@ void printStack(Node* s);
 size_t size(Stack* s);
 Node* makeNode(Tag x);
 
+
+void check(Stack tags[], len)
+{
+	
+	
+}
+
+
 //
 const size_t LINE_MAX = 4096;
 int main(int argc, char** argv)
 {
     char* html = argv[1];
 	
-	Stack * tags = malloc(sizeof(Stack));
+    Stack * tags = malloc(sizeof(Stack));
     tags -> top = NULL;
     
     Stack * broken = malloc(sizeof(Stack));
