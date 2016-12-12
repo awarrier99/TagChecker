@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 			size_t closePlace = strchr(reading+place,'>')-reading;
 			
 			printf("Open place: %zu, Close place:%zu\n", openPlace,closePlace);
-			if(closePlace != openPlace && closePlace > openPlace && closePlace < LINE_MAX && openPlace < LINE_MAX)
+			if(closePlace != openPlace && closePlace > openPlace && closePlace < LINE_MAX && openPlace < LINE_MAX && reading[openPlace + 1] != '!')
 			{
 				Tag * newTag = malloc(sizeof(Tag));
 				switch(reading[openPlace+1]=='/')
@@ -130,12 +130,27 @@ int main(int argc, char** argv)
 	Node* current = orderedTags->top;
 	while( ! (isEmpty(orderedTags)) )
 	{
-		Tag* current = pop(orderedTags);
-		printf("<%s>, line %d\n", current->type+1,current->lineNum);
-		free(current->type);
-		free(current);
+		Tag* curtag = current->datum;
+		char* ctype = curtag->type + 1;
+		Tag* nexttag = current->next->datum;
+		char* atype = nexttag->type + 1;
+		if (*atype == '/')
+		{
+			*atype += 1;
+			char* space = strchr(ctype, ' ');
+			printf("%s\n\n", ctype);
+			*space = '\0';
+
+			printf("%s\n%s\n\n", ctype, atype);
+			if (strcmp(ctype, atype) == 0)
+			{
+				printf("Match");	
+			}
+		}
+		current = current->next;
 	}
 	
+
 	free(tags);
 	free(orderedTags);
 	free(broken);
