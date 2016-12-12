@@ -63,12 +63,11 @@ int main(int argc, char** argv)
 	Stack * tags = malloc(sizeof(Stack));
     tags -> top = NULL;
     
-    Stack * orderedTags = malloc(sizeof(Stack));
-    orderedTags -> top = NULL;
+    Stack * closed = malloc(sizeof(Stack));
+    closed -> top = NULL;
     
-    Stack * broken = malloc(sizeof(Stack));
-    broken -> top = NULL;
-    
+    Stack * orderedClosed = malloc(sizeof(Stack));
+    orderedClosed -> top = NULL;
     FILE* fp = fopen(html, "r");
     if(fp==NULL){
         fprintf(stderr, "Oh boy something went wrong with %s\n", html);
@@ -83,7 +82,7 @@ int main(int argc, char** argv)
 		{
 			printf("Reading: %zu:%zu:%d\n", place,LINE_MAX,lineNum);
 			
-			printf(reading);
+			printf(reading); 
 			size_t openPlace = strchr(reading+place,'<')-reading;
 			size_t closePlace = strchr(reading+place,'>')-reading;
 			
@@ -94,6 +93,7 @@ int main(int argc, char** argv)
 				switch(reading[openPlace+1]=='/')
 				{
 					case true:
+						openPlace+=1;
 						newTag->isClose=true;
 						break;
 					case false:
@@ -102,13 +102,25 @@ int main(int argc, char** argv)
 				}
 				newTag -> lineNum = lineNum;
 				char* newTypeName = malloc(sizeof(char)*closePlace-openPlace+1);
-				for(int i = 0; i < closePlace-openPlace;i++)
+				for(int i = 0; i < closePlace-openPlace-1;i++)
 				{
-					newTypeName[i] = reading[openPlace+i];
+					if(reading[openPlace+i+1] == ' ')
+					{
+						break;
+					}
+					newTypeName[i] = reading[openPlace+i+1];
 				}
 				newTypeName[closePlace-openPlace+1] = '\0';
+				printf("%s\n", newTypeName);
 				newTag -> type = newTypeName;
-				push(tags,newTag);
+				if(newTag -> isClose)
+				{
+					push(closed,newTag);
+				}
+				else
+				{
+					push(tags,newTag);
+				}
 				place += closePlace+1;
 				continue;
 			}
@@ -121,40 +133,51 @@ int main(int argc, char** argv)
 	}
 	fclose(fp);
 	
-	printf("\n-----HERE ARE YOUR TAGS------\n");
-	while( ! (isEmpty(tags)) )
+	printf("Going through\n");
+	while( !(isEmpty(tags)) && !(isEmpty(closed)))
 	{
-		push(orderedTags,pop(tags));
-	}
-	
-	Node* current = orderedTags->top;
-	while( ! (isEmpty(orderedTags)) )
-	{
-		Tag* curtag = current->datum;
-		char* ctype = curtag->type + 1;
-		Tag* nexttag = current->next->datum;
-		char* atype = nexttag->type + 1;
-		if (*atype == '/')
-		{
-			*atype += 1;
-			char* space = strchr(ctype, ' ');
-			printf("%s\n\n", ctype);
-			*space = '\0';
+		Tag* openTag = pop(tags);
+		Tag* closeTag = pop(closed);
 
-			printf("%s\n%s\n\n", ctype, atype);
-			if (strcmp(ctype, atype) == 0)
-			{
-				printf("Match");	
-			}
+		printf("Opentype: '%s', Closetype: '%s'\n\n", openTag->type, closeTag->type);
+		if( strcmp(openTag->type,closeTag->type) != 0 )
+		{
+			printf("ERROR! Tag of Type '%s' on line %d does not have a proper closing tag! Closing tag should be of type '%s', but was found to be of type '%s'!\n", openTag->type, openTag->lineNum,openTag->type, closeTag->type);
 		}
-		current = current->next;
+		free(openTag->type);
+		free(closeTag->type);
+		free(openTag);
+		free(closeTag);
 	}
 	
+	if( !(isEmpty(tags)) )
+	{
+		printf("You do not have enough closing tags!\n");
+		while( !(isEmpty(tags)) )
+		{
+			Tag* erase = pop(tags);
+			free(erase->type);
+			free(erase);
+		}
+	}
+	else if( !(isEmpty(closed)) )
+	{
+		printf("You have too many closing tags!\n");
+		while( !(isEmpty(closed)) )
+		{
+			Tag* erase = pop(closed);
+			free(erase->type);
+			free(erase);
+		}
+	}
+	else
+	{
+		printf("Your tags are okay!\n");
+	}
 
 	free(tags);
-	free(orderedTags);
-	free(broken);
-	
+	free(closed);
+	free(orderedClosed);
     return 0;
 }
 
